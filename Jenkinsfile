@@ -10,17 +10,25 @@ pipeline {
         }
 
         stage('Test') {
-            steps {
-                echo 'Running Node.js tests...'
-                sh '''
-                    docker run --rm \
-                      -v "$WORKSPACE/app:/app" \
-                      -w /app \
-                      node:22-alpine \
-                      sh -c "npm ci && npm test"
-                '''
-            }
-        }
+    steps {
+        echo 'Checking project files...'
+        sh '''
+            set -eu
+            pwd
+            ls -la app
+            test -f app/package-lock.json
+        '''
+
+        echo 'Running Node.js tests...'
+        sh '''
+            docker run --rm \
+              -v "$WORKSPACE/app:/app" \
+              -w /app \
+              node:22-alpine \
+              sh -c "npm ci && npm test"
+        '''
+    }
+}
 
         stage('Build') {
             steps {
