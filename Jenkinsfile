@@ -10,25 +10,19 @@ pipeline {
         }
 
         stage('Test') {
-    steps {
-        echo 'Checking project files...'
-        sh '''
-            set -eu
-            pwd
-            ls -la app
-            test -f app/package-lock.json
-        '''
+            steps {
+                echo 'Building test image...'
+                sh '''
+                    docker build \
+                    -f app/Dockerfile.test \
+                    -t bootcamp-nodejs-test:$BUILD_NUMBER \
+                    app
+                '''
 
-        echo 'Running Node.js tests...'
-        sh '''
-            docker run --rm \
-              -v "$WORKSPACE/app:/app" \
-              -w /app \
-              node:22-alpine \
-              sh -c "npm ci && npm test"
-        '''
-    }
-}
+                echo 'Running Node.js tests...'
+                sh 'docker run --rm bootcamp-nodejs-test:$BUILD_NUMBER'
+            }
+        }
 
         stage('Build') {
             steps {
