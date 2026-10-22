@@ -31,6 +31,31 @@ pipeline {
             }
         }
 
-        // Deployment ergänzen wir, sobald SSH eingerichtet ist.
+        stage('Deploy') {
+    steps {
+        echo 'Deploying application to EC2...'
+
+        sshagent(credentials: ['ec2-server-key']) {
+            sh '''
+                set -eu
+
+                EC2_HOST="ec2-user@51.20.108.4"
+                DEPLOY_DIR="/home/ec2-user/aws-exercises"
+
+                ssh -o StrictHostKeyChecking=accept-new \
+                    "$EC2_HOST" \
+                    "mkdir -p $DEPLOY_DIR"
+
+                scp -o StrictHostKeyChecking=accept-new \
+                    -r app docker-compose.yml \
+                    "$EC2_HOST:$DEPLOY_DIR/"
+
+                ssh -o StrictHostKeyChecking=accept-new \
+                    "$EC2_HOST" \
+                    "cd $DEPLOY_DIR && docker compose up -d --build"
+            '''
+        }
+    }
+}
     }
 }
